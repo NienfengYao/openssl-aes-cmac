@@ -11,11 +11,9 @@
   */
 void show_help(char * const help[], int num)
 {
-    int i;
-
     if (help[0]) {
         printf("help info:\n");
-        for (i = 0; i < num; i++)
+        for (int i = 0; i < num; i++)
             printf("\t%s\n", help[i]);
         printf("\n");
     }
@@ -52,7 +50,7 @@ bool verify_mac(int idx, unsigned char* in, unsigned int len, unsigned char* out
     bool flag = true;
     unsigned char result[AES_KEY_LEN];
     
-    printf("Test Case %d: M len = %d\n", idx, len);
+    printf("Test Case %d: M len = %u\n", idx, len);
     printf("\tM:\t\t");
     print_bytes(in, len);
     // printf("\tOut:\t\t");
