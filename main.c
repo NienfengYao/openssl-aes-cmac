@@ -29,8 +29,7 @@ int main(int argc, char* argv[])
                 printf("\t%s -i file -o file -s (Generate the signature)\n", argv[0]);
                 break;
             case 't':
-                printf("%s\n", help_strings[1]);
-                unit_test2();
+                unit_test();
                 break;
             case 'b':
                 printf("option b \n");
