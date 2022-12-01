@@ -1,7 +1,15 @@
 #include <stdio.h>
-#include <openssl/cmac.h>
 #include <string.h>
+#include <openssl/cmac.h>
 #include "utils.h"
+
+/* Test items base RFC 4493 (https://www.rfc-editor.org/rfc/rfc4493)*/
+// K: 2b7e1516 28aed2a6 abf71588 09cf4f3c
+unsigned char key[] = {
+    0x2b,0x7e,0x15,0x16,
+    0x28,0xae,0xd2,0xa6,
+    0xab,0xf7,0x15,0x88,
+    0x09,0xcf,0x4f,0x3c};
 
 /**
   * @brief       show command's help message.
@@ -60,22 +68,15 @@ bool verify_mac(int idx, unsigned char* in, unsigned int len, unsigned char* out
     print_bytes(result, AES_KEY_LEN);
     printf("\tVeirfied:\t");
     if(!strncmp((char*)out, (char*)result, AES_KEY_LEN))
-        printf("[PASS]\n");
+        printf("[PASS]\n\n");
     else
-        printf("[FAIL]\n");
+        printf("[FAIL]\n\n");
     return flag;
 }
 
-void unit_test(void)
+void test_case(void)
 {
-    /* Test items base RFC 4493 */
-    // K: 2b7e1516 28aed2a6 abf71588 09cf4f3c
-    unsigned char key[] = {
-        0x2b,0x7e,0x15,0x16, 
-        0x28,0xae,0xd2,0xa6,
-        0xab,0xf7,0x15,0x88,
-        0x09,0xcf,0x4f,0x3c};
-
+    /* Test items base RFC 4493 (https://www.rfc-editor.org/rfc/rfc4493)*/
     // Test Case 1 =====
     // M: <empty string> Mlen: 0
     unsigned char msg1[] = { };
@@ -155,4 +156,43 @@ void unit_test(void)
     verify_mac(2, msg2, sizeof(msg2), out2, key);
     verify_mac(3, msg3, sizeof(msg3), out3, key);
     verify_mac(4, msg4, sizeof(msg4), out4, key);
+}
+
+void read_file(const char *f_name)
+{
+    FILE *fp;
+    long position, f_len;
+    void *buff = NULL;
+    unsigned char result[AES_KEY_LEN];
+
+    printf("f_in:%s(%ld)\n", f_name, strlen(f_name));
+    // Open the file for reading in binary mode
+    fp = fopen(f_name, "rb");
+    if (fp == NULL){
+        printf("Error: Open file:%s Failed.\n", f_name);
+        exit(1);
+    }
+    // Get file length
+    fseek(fp, 0, SEEK_END);
+    f_len = ftell(fp);
+    printf("f_len: %ld\n", f_len);
+    fseek(fp, 0, SEEK_SET);
+    // Allocate memory
+    buff = (char *)malloc(f_len+1);
+    printf("sizeof(buff) = %ld\n", sizeof(buff));
+    if (!buff){
+		printf("Error: Allocate memory Failed.\n");
+        fclose(fp);
+		return;
+	}
+    //Read file contents into buffer
+	fread(buff, f_len, 1, fp);
+
+	//Do what ever with buffer
+    printf("\tAES-CMAC:\t");
+    aes_cmac(buff, f_len, result, key);
+    print_bytes(result, AES_KEY_LEN);
+
+	fclose(fp);
+	free(buff);
 }
