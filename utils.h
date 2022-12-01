@@ -21,6 +21,7 @@ typedef enum action{
 void show_help(char * const help[], int num);
 void print_bytes(unsigned char* buf, const size_t len);
 void test_case(void);
-void read_file(const char *f_name);
+unsigned char* read_file(const char *f_name, size_t *buff_len);
+void file_cmac(const char *f_name);
 
 #endif /* __UTILS_H__ */

@@ -158,41 +158,50 @@ void test_case(void)
     verify_mac(4, msg4, sizeof(msg4), out4, key);
 }
 
-void read_file(const char *f_name)
+unsigned char* read_file(const char *f_name, size_t *buff_len)
 {
     FILE *fp;
-    long position, f_len;
-    void *buff = NULL;
-    unsigned char result[AES_KEY_LEN];
+    size_t f_len;
+    unsigned char *buff = NULL;
 
-    printf("f_in:%s(%ld)\n", f_name, strlen(f_name));
     // Open the file for reading in binary mode
     fp = fopen(f_name, "rb");
     if (fp == NULL){
         printf("Error: Open file:%s Failed.\n", f_name);
-        exit(1);
+        return NULL;
     }
     // Get file length
     fseek(fp, 0, SEEK_END);
     f_len = ftell(fp);
-    printf("f_len: %ld\n", f_len);
     fseek(fp, 0, SEEK_SET);
     // Allocate memory
     buff = (char *)malloc(f_len+1);
-    printf("sizeof(buff) = %ld\n", sizeof(buff));
     if (!buff){
 		printf("Error: Allocate memory Failed.\n");
         fclose(fp);
-		return;
+        return NULL;
 	}
     //Read file contents into buffer
 	fread(buff, f_len, 1, fp);
-
-	//Do what ever with buffer
-    printf("\tAES-CMAC:\t");
-    aes_cmac(buff, f_len, result, key);
-    print_bytes(result, AES_KEY_LEN);
-
 	fclose(fp);
+    *buff_len = f_len;
+    return buff;
+}
+
+void file_cmac(const char *f_name)
+{
+    size_t buff_len = 0;
+    unsigned char *buff = NULL;
+    unsigned char result[AES_KEY_LEN];
+
+    buff = read_file(f_name, &buff_len);
+    if(buff_len <=0){
+        printf("Error: Read file failed.\n"); 
+        return;
+    }
+    printf("File:%s, size: %ld bytes\n", f_name, buff_len);
+    printf("AES-CMAC:\t");
+    aes_cmac(buff, buff_len, result, key);
+    print_bytes(result, AES_KEY_LEN);
 	free(buff);
 }

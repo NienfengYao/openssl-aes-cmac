@@ -50,13 +50,14 @@ int main(int argc, char* argv[])
     printf("f_out:%s(%ld)\n", f_out, strlen(f_out));
     switch(act) {
         case ACTION_TEST:
+            printf("ACTION_TEST\n");
             test_case();
             break;
         case ACTION_CMAC:
             printf("ACTION_CMAC\n");
             if(strlen(f_in) == 0)
                 break;
-            read_file(f_in);
+            file_cmac(f_in);
             break;
         case ACTION_SIGN:
             printf("ACTION_SIGN\n");
