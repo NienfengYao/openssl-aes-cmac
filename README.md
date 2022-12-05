@@ -7,6 +7,7 @@ AES-CMAC example with openssl library
     ./signtool -t (Do unit test)
     ./signtool -i file -c (AES-CMAC value of file)
     ./signtool -i file -o file -s (Generate the signature)
+    hexdump -n 48 image_signed.bin (Check the content of header of the signed file)
 
 # Reference
 * [RFC 4493: The AES-CMAC Algorithm](https://www.rfc-editor.org/rfc/rfc4493)
