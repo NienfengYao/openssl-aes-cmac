@@ -1,6 +1,13 @@
 # openssl-aes-cmac
 AES-CMAC example with openssl library
 
+# Test
+    make
+    ./signtool -h
+    ./signtool -t (Do unit test)
+    ./signtool -i file -c (AES-CMAC value of file)
+    ./signtool -i file -o file -s (Generate the signature)
+
 # Reference
 * [RFC 4493: The AES-CMAC Algorithm](https://www.rfc-editor.org/rfc/rfc4493)
 * [PyCryptodome](https://pycryptodome.readthedocs.io/en/latest/src/hash/cmac.html)
