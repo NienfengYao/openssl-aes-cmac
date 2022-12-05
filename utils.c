@@ -3,9 +3,10 @@
 #include <openssl/cmac.h>
 #include "utils.h"
 
+
 /* Test items base RFC 4493 (https://www.rfc-editor.org/rfc/rfc4493)*/
 // K: 2b7e1516 28aed2a6 abf71588 09cf4f3c
-unsigned char key[] = {
+unsigned char AES_KEY[] = {
     0x2b,0x7e,0x15,0x16,
     0x28,0xae,0xd2,0xa6,
     0xab,0xf7,0x15,0x88,
@@ -41,7 +42,7 @@ size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, unsigne
     size_t out_len;
 
     CMAC_CTX *ctx = CMAC_CTX_new();
-    CMAC_Init(ctx, key, 16, EVP_aes_128_cbc(), NULL);
+    CMAC_Init(ctx, AES_KEY, 16, EVP_aes_128_cbc(), NULL);
     //printf("aes_cmac(): message length = %d bytes\n", in_len);
     //print_bytes(in, in_len);
     CMAC_Update(ctx, in, in_len);
@@ -152,10 +153,10 @@ void test_case(void)
         0xfc, 0x49, 0x74, 0x17,
         0x79, 0x36, 0x3c, 0xfe};
 
-    verify_mac(1, msg1, sizeof(msg1), out1, key);
-    verify_mac(2, msg2, sizeof(msg2), out2, key);
-    verify_mac(3, msg3, sizeof(msg3), out3, key);
-    verify_mac(4, msg4, sizeof(msg4), out4, key);
+    verify_mac(1, msg1, sizeof(msg1), out1, AES_KEY);
+    verify_mac(2, msg2, sizeof(msg2), out2, AES_KEY);
+    verify_mac(3, msg3, sizeof(msg3), out3, AES_KEY);
+    verify_mac(4, msg4, sizeof(msg4), out4, AES_KEY);
 }
 
 unsigned char* read_file(const char *f_name, size_t *buff_len)
@@ -188,6 +189,25 @@ unsigned char* read_file(const char *f_name, size_t *buff_len)
     return buff;
 }
 
+int write_file(const char *f_name, unsigned char *buff, const size_t buff_len, \
+    Image_Header_T *img_p, unsigned int img_size, TLV_T *tlv_p, unsigned int tlv_size)
+{
+    FILE *fp;
+    size_t f_len;
+
+    fp = fopen(f_name, "w"); /* Open the file for writing */
+    if (fp == NULL){
+        printf("Error: Write file:%s Failed.\n", f_name);
+        return -1;
+    }
+
+    fwrite(img_p, img_size, 1, fp);
+    fwrite(tlv_p, tlv_size, 1, fp);
+    fwrite(buff, 1, buff_len, fp);
+	fclose(fp);
+    return 0;
+}
+
 void file_cmac(const char *f_name)
 {
     size_t buff_len = 0;
@@ -200,8 +220,39 @@ void file_cmac(const char *f_name)
         return;
     }
     printf("File:%s, size: %ld bytes\n", f_name, buff_len);
-    printf("AES-CMAC:\t");
-    aes_cmac(buff, buff_len, result, key);
+    printf("AES-CMAC: ");
+    aes_cmac(buff, buff_len, result, AES_KEY);
     print_bytes(result, AES_KEY_LEN);
+	free(buff);
+}
+
+void sign(const char *f_in, const char *f_out)
+{
+    size_t buff_len = 0;
+    unsigned char *buff = NULL;
+    unsigned char result[AES_KEY_LEN];
+    Image_Header_T img;
+    TLV_T tlv;
+
+    buff = read_file(f_in, &buff_len);
+    if(buff_len <=0){
+        printf("Error: Read file failed.\n");
+        return;
+    }
+    printf("File:%s, size: %ld bytes\n", f_in, buff_len);
+    aes_cmac(buff, buff_len, result, AES_KEY);
+    printf("AES-CMAC: ");
+    print_bytes(result, AES_KEY_LEN);
+    printf("img_size:%ld, tlv_size:%ld\n", sizeof(img), sizeof(tlv));
+    img.ih_magic = 0x12345678;
+    img.ih_hdr_size = sizeof(img);
+    img.ih_img_size = buff_len;
+    img.ih_tlv_size = sizeof(tlv);
+    img.ih_img_version = 0x87654321;
+    img.ih_img_attr = 0x01;
+    tlv.tlv_type = 0x01;
+    tlv.tlv_length = AES_KEY_LEN;
+    strncpy(tlv.tlv_value, result, AES_KEY_LEN);
+    write_file(f_out, buff, buff_len, &img, sizeof(img), &tlv, sizeof(tlv));
 	free(buff);
 }

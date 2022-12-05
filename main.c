@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "utils.h"
+#include "sign.h"
 
 static char * const help_strings[] = {
     "[-h|--help]",
@@ -46,23 +47,24 @@ int main(int argc, char* argv[])
                 printf("default \n");
         }
     }
-    printf("f_in:%s(%ld)\n", f_in, strlen(f_in));
-    printf("f_out:%s(%ld)\n", f_out, strlen(f_out));
+    //printf("f_in:%s(%ld)\n", f_in, strlen(f_in));
+    //printf("f_out:%s(%ld)\n", f_out, strlen(f_out));
     switch(act) {
         case ACTION_TEST:
-            printf("ACTION_TEST\n");
+            //printf("ACTION_TEST\n");
             test_case();
             break;
         case ACTION_CMAC:
-            printf("ACTION_CMAC\n");
+            //printf("ACTION_CMAC\n");
             if(strlen(f_in) == 0)
                 break;
             file_cmac(f_in);
             break;
         case ACTION_SIGN:
-            printf("ACTION_SIGN\n");
+            //printf("ACTION_SIGN\n");
             if(strlen(f_in)==0 || strlen(f_out)==0)
                 break;
+            sign(f_in, f_out);
             break;
         default:
             show_help(help_strings, ARRAY_SIZE(help_strings));
