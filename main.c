@@ -2,7 +2,6 @@
 #include <unistd.h>
 #include <string.h>
 #include "utils.h"
-#include "sign.h"
 
 static char * const help_strings[] = {
     "[-h|--help]",
