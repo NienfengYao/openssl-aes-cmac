@@ -4,9 +4,9 @@ AES-CMAC example with openssl library
 # Test
     make
     ./signtool -h
-    ./signtool -t (Do unit test)
-    ./signtool -i file -c (AES-CMAC value of file)
-    ./signtool -i file -o file -s (Generate the signature)
+    ./signtool -t (Do test case)
+    ./signtool -i file -c (Read data from file and do AES-CMAC operation)
+    ./signtool -i file -o file -s (Read data from file and generate the signature)
     hexdump -n 48 image_signed.bin (Check the content of header of the signed file)
 
 # Reference

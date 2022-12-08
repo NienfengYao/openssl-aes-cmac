@@ -69,9 +69,9 @@ int main(int argc, char* argv[])
         default:
             show_help(help_strings, ARRAY_SIZE(help_strings));
             printf("example:\n");
-            printf("\t%s -t (Do unit test)\n", argv[0]);
-            printf("\t%s -i file -c (AES-CMAC value of file)\n", argv[0]);
-            printf("\t%s -i file -o file -s (Generate the signature)\n", argv[0]);
+            printf("\t%s -t (Do test case)\n", argv[0]);
+            printf("\t%s -i file -c (Read data from file and do AES-CMAC operation)\n", argv[0]);
+            printf("\t%s -i file -o file -s (Read data from file and generate the signature)\n", argv[0]);
             break;
     }
     return 0;
