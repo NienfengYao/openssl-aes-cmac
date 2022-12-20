@@ -8,4 +8,4 @@ all: $(objects)
 	gcc -c $< -o $@
 
 clean:
-	rm *.o
+	rm *.o signtool

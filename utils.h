@@ -1,13 +1,6 @@
 #ifndef __UTILS_H__
 #define __UTILS_H__
 
-//#include "sign.h"
-
-/*
-typedef unsigned char        uint8_t;
-typedef unsigned short       uint16_t;
-typedef unsigned int         uint32_t;
-*/
 typedef enum { false = 0, true = !false } bool;
 
 # define AES_KEY_LEN    16
@@ -31,6 +24,7 @@ typedef struct TLV{                 // Type-Length-Value
 
 typedef enum action{
     ACTION_TEST = 0,
+    ACTION_AES_KEY,
     ACTION_CMAC,
     ACTION_SIGN,
     ACTION_MAX
@@ -39,13 +33,11 @@ typedef enum action{
 extern unsigned char AES_KEY[AES_KEY_LEN];
 
 void show_help(char * const help[], int num);
-void print_bytes(unsigned char* buf, const size_t len);
-size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, unsigned char *key);
-void test_case(void);
 unsigned char* read_file(const char *f_name, size_t *buff_len);
 int write_file(const char *f_name, unsigned char *buff, const size_t buff_len, \
     Image_Header_T *img_p, unsigned int img_size, TLV_T *tlv_p, unsigned int tlv_size);
-void file_cmac(const char *f_name);
-void sign(const char *f_in, const char *f_out);
+void do_test(void);
+void do_cmac(const char *f_name);
+void do_sign(const char *f_in, const char *f_out);
 
 #endif /* __UTILS_H__ */

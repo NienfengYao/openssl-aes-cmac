@@ -4,6 +4,12 @@
 #include "utils.h"
 
 
+static void print_bytes(unsigned char* buf, const size_t len);
+static size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, \
+    unsigned char *key);
+static bool verify_mac(int idx, unsigned char* in, unsigned int len, \
+    unsigned char* out, unsigned char* key);
+
 /* Test items base RFC 4493 (https://www.rfc-editor.org/rfc/rfc4493)*/
 // K: 2b7e1516 28aed2a6 abf71588 09cf4f3c
 unsigned char AES_KEY[] = {
@@ -37,7 +43,8 @@ void print_bytes(unsigned char* buf, const size_t len)
 }
 
 /* AES-128, key length=128 bits */
-size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, unsigned char *key)
+size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, \
+    unsigned char *key)
 {
     size_t out_len;
 
@@ -54,7 +61,8 @@ size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, unsigne
 }
 
 // Verify the CMAC
-bool verify_mac(int idx, unsigned char* in, unsigned int len, unsigned char* out, unsigned char* key)
+bool verify_mac(int idx, unsigned char* in, unsigned int len, unsigned char* out, \
+    unsigned char* key)
 {
     bool flag = true;
     unsigned char result[AES_KEY_LEN];
@@ -75,7 +83,56 @@ bool verify_mac(int idx, unsigned char* in, unsigned int len, unsigned char* out
     return flag;
 }
 
-void test_case(void)
+unsigned char* read_file(const char *f_name, size_t *buff_len)
+{
+    FILE *fp;
+    size_t f_len;
+    unsigned char *buff = NULL;
+
+    // Open the file for reading in binary mode
+    fp = fopen(f_name, "rb");
+    if (fp == NULL){
+        printf("Error: Open file:%s Failed.\n", f_name);
+        return NULL;
+    }
+    // Get file length
+    fseek(fp, 0, SEEK_END);
+    f_len = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    // Allocate memory
+    buff = (char *)malloc(f_len+1);
+    if (!buff){
+		printf("Error: Allocate memory Failed.\n");
+        fclose(fp);
+        return NULL;
+	}
+    //Read file contents into buffer
+	fread(buff, f_len, 1, fp);
+	fclose(fp);
+    *buff_len = f_len;
+    return buff;
+}
+
+int write_file(const char *f_name, unsigned char *buff, const size_t buff_len, \
+    Image_Header_T *img_p, unsigned int img_size, TLV_T *tlv_p, unsigned int tlv_size)
+{
+    FILE *fp;
+    size_t f_len;
+
+    fp = fopen(f_name, "w"); /* Open the file for writing */
+    if (fp == NULL){
+        printf("Error: Write file:%s Failed.\n", f_name);
+        return -1;
+    }
+
+    fwrite(img_p, img_size, 1, fp);
+    fwrite(tlv_p, tlv_size, 1, fp);
+    fwrite(buff, 1, buff_len, fp);
+	fclose(fp);
+    return 0;
+}
+
+void do_test(void)
 {
     /* Test items base RFC 4493 (https://www.rfc-editor.org/rfc/rfc4493)*/
     // Test Case 1 =====
@@ -159,56 +216,7 @@ void test_case(void)
     verify_mac(4, msg4, sizeof(msg4), out4, AES_KEY);
 }
 
-unsigned char* read_file(const char *f_name, size_t *buff_len)
-{
-    FILE *fp;
-    size_t f_len;
-    unsigned char *buff = NULL;
-
-    // Open the file for reading in binary mode
-    fp = fopen(f_name, "rb");
-    if (fp == NULL){
-        printf("Error: Open file:%s Failed.\n", f_name);
-        return NULL;
-    }
-    // Get file length
-    fseek(fp, 0, SEEK_END);
-    f_len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    // Allocate memory
-    buff = (char *)malloc(f_len+1);
-    if (!buff){
-		printf("Error: Allocate memory Failed.\n");
-        fclose(fp);
-        return NULL;
-	}
-    //Read file contents into buffer
-	fread(buff, f_len, 1, fp);
-	fclose(fp);
-    *buff_len = f_len;
-    return buff;
-}
-
-int write_file(const char *f_name, unsigned char *buff, const size_t buff_len, \
-    Image_Header_T *img_p, unsigned int img_size, TLV_T *tlv_p, unsigned int tlv_size)
-{
-    FILE *fp;
-    size_t f_len;
-
-    fp = fopen(f_name, "w"); /* Open the file for writing */
-    if (fp == NULL){
-        printf("Error: Write file:%s Failed.\n", f_name);
-        return -1;
-    }
-
-    fwrite(img_p, img_size, 1, fp);
-    fwrite(tlv_p, tlv_size, 1, fp);
-    fwrite(buff, 1, buff_len, fp);
-	fclose(fp);
-    return 0;
-}
-
-void file_cmac(const char *f_name)
+void do_cmac(const char *f_name)
 {
     size_t buff_len = 0;
     unsigned char *buff = NULL;
@@ -226,7 +234,7 @@ void file_cmac(const char *f_name)
 	free(buff);
 }
 
-void sign(const char *f_in, const char *f_out)
+void do_sign(const char *f_in, const char *f_out)
 {
     size_t buff_len = 0;
     unsigned char *buff = NULL;
