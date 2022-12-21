@@ -49,14 +49,10 @@ size_t aes_cmac(unsigned char *in, const int in_len, unsigned char *out, \
     size_t out_len;
 
     CMAC_CTX *ctx = CMAC_CTX_new();
-    CMAC_Init(ctx, AES_KEY, 16, EVP_aes_128_cbc(), NULL);
-    //printf("aes_cmac(): message length = %d bytes\n", in_len);
-    //print_bytes(in, in_len);
+    CMAC_Init(ctx, key, 16, EVP_aes_128_cbc(), NULL);
     CMAC_Update(ctx, in, in_len);
     CMAC_Final(ctx, out, &out_len);
     CMAC_CTX_free(ctx);
-    //printf("out_len = %lu \n", out_len);
-    //print_bytes(out, out_len);
     return out_len;
 }
 
@@ -216,28 +212,64 @@ void do_test(void)
     verify_mac(4, msg4, sizeof(msg4), out4, AES_KEY);
 }
 
-void do_cmac(const char *f_name)
+void do_key(const char *f_key)
 {
     size_t buff_len = 0;
     unsigned char *buff = NULL;
-    unsigned char result[AES_KEY_LEN];
 
-    buff = read_file(f_name, &buff_len);
-    if(buff_len <=0){
+    buff = read_file(f_key, &buff_len);
+    if(buff_len <= 0){
         printf("Error: Read file failed.\n"); 
         return;
+    }else if(buff_len != AES_KEY_LEN){
+        printf("Error: Key length %ld != 16 bytes, failed.\n", buff_len);
+        return;
     }
-    printf("File:%s, size: %ld bytes\n", f_name, buff_len);
-    printf("AES-CMAC: ");
-    aes_cmac(buff, buff_len, result, AES_KEY);
-    print_bytes(result, AES_KEY_LEN);
+    printf("File:%s, size: %ld bytes\n", f_key, buff_len);
+    print_bytes(buff, buff_len);
 	free(buff);
 }
 
-void do_sign(const char *f_in, const char *f_out)
+void do_cmac(const char *f_in, const char *f_key)
 {
-    size_t buff_len = 0;
-    unsigned char *buff = NULL;
+    size_t buff_len=0, key_len=0;
+    unsigned char *buff=NULL, *key=NULL;
+    unsigned char result[AES_KEY_LEN];
+
+    buff = read_file(f_in, &buff_len);
+    if(buff_len <=0){
+        printf("Error: Read file(%s) failed.\n", f_in);
+        goto exit_do_cmac;
+    }
+    printf("File:%s, size: %ld bytes\n", f_in, buff_len);
+    if (strlen(f_key) == 0){    // Use default AES-KEY
+        aes_cmac(buff, buff_len, result, AES_KEY);
+    }else{                      // Use external AES-KEY
+        key = read_file(f_key, &key_len);
+        if(key_len <= 0){
+            printf("Error: Read file(%s) failed.\n", f_key);
+            goto exit_do_cmac;
+        }else if(key_len != AES_KEY_LEN){
+            printf("Error: Key length %ld != 16 bytes, failed.\n", key_len);
+            goto exit_do_cmac;
+        }else{
+            printf("File:%s, size: %ld bytes\n", f_key, key_len);
+            aes_cmac(buff, buff_len, result, key);
+        }
+    }
+    printf("AES-CMAC: ");
+    print_bytes(result, AES_KEY_LEN);
+exit_do_cmac:
+    if(buff)
+        free(buff);
+    if(key)
+        free(key);
+}
+
+void do_sign(const char *f_in, const char *f_out, const char *f_key)
+{
+    size_t buff_len=0, key_len=0;
+    unsigned char *buff=NULL, *key=NULL;
     unsigned char result[AES_KEY_LEN];
     Image_Header_T img;
     TLV_T tlv;
@@ -245,10 +277,23 @@ void do_sign(const char *f_in, const char *f_out)
     buff = read_file(f_in, &buff_len);
     if(buff_len <=0){
         printf("Error: Read file failed.\n");
-        return;
+        goto exit_do_sign;
     }
     printf("File:%s, size: %ld bytes\n", f_in, buff_len);
-    aes_cmac(buff, buff_len, result, AES_KEY);
+    if (strlen(f_key) == 0){    // Use default AES-KEY
+        aes_cmac(buff, buff_len, result, AES_KEY);
+    }else{                      // Use external AES-KEY
+        key = read_file(f_key, &key_len);
+        if(key_len <= 0){
+            printf("Error: Read file(%s) failed.\n", f_key); 
+            goto exit_do_sign;
+        }else if(key_len != AES_KEY_LEN){
+            printf("Error: Key length %ld != 16 bytes, failed.\n", key_len); 
+            goto exit_do_sign;
+        }else{
+            aes_cmac(buff, buff_len, result, key);
+        }
+    }
     printf("AES-CMAC: ");
     print_bytes(result, AES_KEY_LEN);
     printf("img_size:%ld, tlv_size:%ld\n", sizeof(img), sizeof(tlv));
@@ -262,5 +307,10 @@ void do_sign(const char *f_in, const char *f_out)
     tlv.tlv_length = AES_KEY_LEN;
     strncpy(tlv.tlv_value, result, AES_KEY_LEN);
     write_file(f_out, buff, buff_len, &img, sizeof(img), &tlv, sizeof(tlv));
-	free(buff);
+
+exit_do_sign:
+    if(buff)
+        free(buff);
+    if(key)
+        free(key);
 }

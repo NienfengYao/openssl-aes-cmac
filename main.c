@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
                 break;
             case 'k':
                 strcpy(f_key, optarg);
+                act = ACTION_AES_KEY;
                 break;
             case 'c':
                 act = ACTION_CMAC;
@@ -52,22 +53,29 @@ int main(int argc, char* argv[])
                 printf("default \n");
         }
     }
+    /*
     printf("f_in:%s(%ld)\n", f_in, strlen(f_in));
     printf("f_out:%s(%ld)\n", f_out, strlen(f_out));
     printf("f_key:%s(%ld)\n", f_key, strlen(f_key));
+    */
     switch(act) {
         case ACTION_TEST:
             do_test();
             break;
+        case ACTION_AES_KEY:
+            if(strlen(f_key) == 0)
+                break;
+            do_key(f_key);
+            break;
         case ACTION_CMAC:
             if(strlen(f_in) == 0)
                 break;
-            do_cmac(f_in);
+            do_cmac(f_in, f_key);
             break;
         case ACTION_SIGN:
             if(strlen(f_in)==0 || strlen(f_out)==0)
                 break;
-            do_sign(f_in, f_out);
+            do_sign(f_in, f_out, f_key);
             break;
         default:
             show_help(help_strings, ARRAY_SIZE(help_strings));

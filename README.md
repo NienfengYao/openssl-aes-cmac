@@ -5,9 +5,13 @@ AES-CMAC example with openssl library
     make
     ./signtool -h
     ./signtool -t (Do test case)
+    ./signtool -k (Read key[128-bits] from file and show the content)
     ./signtool -i file -c (Read data from file and do AES-CMAC operation)
     ./signtool -i file -o file -s (Read data from file and generate the signature)
+    ./signtool -i file -k file -c (Read data/key from file and do AES-CMAC operation)
+    ./signtool -i file -k file -o file -s (Read data/key from file and generate the signature)
     hexdump -n 48 image_signed.bin (Check the content of header of the signed file)
+    echo -n -e \\x2b\\x7e\\x15\\x16\\x28\\xae\\xd2\\xa6\\xab\\xf7\\x15\\x88\\x09\\xcf\\x4f\\x3c > key.bin(Write key to file)
 
 # Reference
 * [RFC 4493: The AES-CMAC Algorithm](https://www.rfc-editor.org/rfc/rfc4493)

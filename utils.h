@@ -37,7 +37,8 @@ unsigned char* read_file(const char *f_name, size_t *buff_len);
 int write_file(const char *f_name, unsigned char *buff, const size_t buff_len, \
     Image_Header_T *img_p, unsigned int img_size, TLV_T *tlv_p, unsigned int tlv_size);
 void do_test(void);
-void do_cmac(const char *f_name);
-void do_sign(const char *f_in, const char *f_out);
+void do_key(const char *f_key);
+void do_cmac(const char *f_in, const char *f_key);
+void do_sign(const char *f_in, const char *f_out, const char *f_key);
 
 #endif /* __UTILS_H__ */
